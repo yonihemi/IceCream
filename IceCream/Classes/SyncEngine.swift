@@ -57,7 +57,9 @@ public final class SyncEngine {
                 self.databaseManager.createDatabaseSubscriptionIfHaveNot()
             case .couldNotDetermine:
                 break
-            }
+			@unknown default:
+				break
+			}
         }
     }
     
