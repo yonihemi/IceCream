@@ -44,11 +44,11 @@ public class CreamAsset: Object {
     }
 
     public var filePath: URL {
-        return CreamAsset.creamAssetDefaultURL().appendingPathComponent(uniqueFileName)
+        return CreamAsset.defaultConfiguration.creamAssetsURL.appendingPathComponent(uniqueFileName)
     }
 
     func save(data: Data, to path: String, shouldOverwrite: Bool) {
-        let url = CreamAsset.creamAssetDefaultURL().appendingPathComponent(path)
+        let url = CreamAsset.defaultConfiguration.creamAssetsURL.appendingPathComponent(path)
 
         guard shouldOverwrite || !FileManager.default.fileExists(atPath: url.path) else { return }
         
@@ -123,9 +123,17 @@ public class CreamAsset: Object {
 }
 
 extension CreamAsset {
+	public struct Configuration {
+		public var creamAssetsURL: URL
+	}
+	
+	public static var defaultConfiguration = Configuration(
+		creamAssetsURL: underDocumentsCreamAssetDefaultURL
+	)
+	
     /// The default path for the storing of CreamAsset. That is:
     /// xxx/Document/CreamAsset/
-    public static func creamAssetDefaultURL() -> URL {
+	private static var underDocumentsCreamAssetDefaultURL: URL = {
         let documentDir = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
         let commonAssetPath = documentDir.appendingPathComponent(className())
         if !FileManager.default.fileExists(atPath: commonAssetPath.path) {
@@ -136,12 +144,17 @@ extension CreamAsset {
             }
         }
         return commonAssetPath
-    }
+    }()
+	
+	@available(*, deprecated, renamed: "defaultConfiguration.creamAssetsURL")
+	public static func creamAssetDefaultURL() -> URL {
+		return underDocumentsCreamAssetDefaultURL
+	}
 
     /// Fetch all CreamAsset files' path
     public static func creamAssetFilesPaths() -> [String] {
         do {
-            return try FileManager.default.contentsOfDirectory(atPath: CreamAsset.creamAssetDefaultURL().path)
+            return try FileManager.default.contentsOfDirectory(atPath: CreamAsset.defaultConfiguration.creamAssetsURL.path)
         } catch {
 
         }
@@ -151,7 +164,7 @@ extension CreamAsset {
     /// Execute deletions
     private static func excecuteDeletions(in filesNames: [String]) {
         for fileName in filesNames {
-            let absolutePath = CreamAsset.creamAssetDefaultURL().appendingPathComponent(fileName).path
+            let absolutePath = CreamAsset.defaultConfiguration.creamAssetsURL.appendingPathComponent(fileName).path
             do {
                 print("deleteCacheFiles.removeItem:", absolutePath)
                 try FileManager.default.removeItem(atPath: absolutePath)
